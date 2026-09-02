@@ -481,10 +481,10 @@ const KATEGORI_UMKM = ["Kuliner", "Kerajinan", "Pertanian", "Peternakan", "Lainn
 const KATEGORI_WISATA = ["Wisata Alam", "Wisata Budaya", "Wisata Edukasi", "Lainnya"];
 const DEFAULT_CENTER = [-7.7956, 110.3695]; // sekitar Yogyakarta, sesuaikan jika perlu
 
-let supabase = null;
+let supabaseClient = null;
 let isConfigured = !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON");
 if (isConfigured && window.supabase) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 if (!isConfigured) {
   document.getElementById("configWarning").style.display = "block";
@@ -709,7 +709,7 @@ async function submitForm(e) {
   e.preventDefault();
   hideSubmitError();
 
-  if (!isConfigured || !supabase) {
+  if (!isConfigured || !supabaseClient) {
     showSubmitError("Koneksi Supabase belum dikonfigurasi. Hubungi pengelola website.");
     return;
   }
@@ -742,16 +742,16 @@ async function submitForm(e) {
     for (let i = 0; i < photoFiles.length; i++) {
       const blob = await compressImage(photoFiles[i]);
       const path = currentJenis + "/" + id + "/" + (i + 1) + ".jpg";
-      const { error: upErr } = await supabase.storage.from(STORAGE_BUCKET).upload(path, blob, {
+      const { error: upErr } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, blob, {
         contentType: "image/jpeg",
         upsert: true
       });
       if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      const { data: urlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
       fotoUrls.push(urlData.publicUrl);
     }
 
-    const { error: insErr } = await supabase.from(TABLE_NAME).insert([{
+    const { error: insErr } = await supabaseClient.from(TABLE_NAME).insert([{
       id,
       jenis: currentJenis,
       nama,
@@ -788,13 +788,13 @@ function checkAdminPasscode() {
 }
 
 async function loadAdminData() {
-  if (!isConfigured || !supabase) {
+  if (!isConfigured || !supabaseClient) {
     document.getElementById("adminStatus").textContent = "Koneksi Supabase belum dikonfigurasi.";
     return;
   }
   const status = document.getElementById("adminStatus");
   status.textContent = "Memuat data...";
-  const { data, error } = await supabase.from(TABLE_NAME).select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabaseClient.from(TABLE_NAME).select("*").order("created_at", { ascending: false });
   if (error) {
     status.textContent = "Gagal memuat data: " + error.message;
     return;
