@@ -388,8 +388,8 @@
       <div class="section">
         <h3>Deskripsi &amp; kontak</h3>
         <div class="field">
-          <label class="field-label" id="fDeskripsiLabel" for="fDeskripsi">Deskripsi usaha</label>
-          <textarea id="fDeskripsi" placeholder="Ceritakan produk atau kegiatan usaha secara singkat"></textarea>
+          <label class="field-label" id="fDeskripsiLabel" for="fDeskripsi">Deskripsi usaha <span class="req">*</span></label>
+          <textarea id="fDeskripsi" placeholder="Ceritakan produk atau kegiatan usaha secara singkat" required></textarea>
         </div>
         <div class="field">
           <label class="field-label" for="fKontak">Nomor kontak <span class="req">*</span></label>
@@ -532,7 +532,7 @@ function startForm(jenis) {
   document.getElementById("formTitle").textContent = isUmkm ? "Data UMKM" : "Data Wisata";
   document.getElementById("fNamaLabel").innerHTML = (isUmkm ? "Nama UMKM" : "Nama objek wisata") + ' <span class="req">*</span>';
   document.getElementById("fNama").placeholder = isUmkm ? "Contoh: Warung Bakso Bu Sri" : "Contoh: Air Terjun Deworejo";
-  document.getElementById("fDeskripsiLabel").innerHTML = (isUmkm ? "Deskripsi usaha" : "Deskripsi wisata") + ' <span class="opt">(opsional)</span>';
+  document.getElementById("fDeskripsiLabel").innerHTML = (isUmkm ? "Deskripsi usaha" : "Deskripsi wisata") + ' <span class="req">*</span>';
   const badge = document.getElementById("formBadge");
   badge.textContent = isUmkm ? "UMKM" : "Wisata";
   badge.className = "badge " + (isUmkm ? "badge-umkm" : "badge-wisata");
@@ -732,7 +732,7 @@ async function submitForm(e) {
   const deskripsi = document.getElementById("fDeskripsi").value.trim();
   const kontak = document.getElementById("fKontak").value.trim();
 
-  if (!namaPengisi || !nama || !kategoriPilihan || !alamat || !kontak) {
+  if (!namaPengisi || !nama || !kategoriPilihan || !alamat || !deskripsi || !kontak) {
     showSubmitError("Mohon lengkapi kolom yang bertanda wajib (*).");
     return;
   }
