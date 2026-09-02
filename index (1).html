@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Form Pengumpulan Data WebGIS UMKM/Wisata Deworejo</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1F2A1F;
+    --ink-soft:#4B5A4B;
+    --page:#EFF1E6;
+    --card:#FFFFFF;
+    --line:#D8D3C2;
+    --forest:#2F5233;
+    --forest-dark:#20391F;
+    --gold:#C98A2B;
+    --gold-dark:#9E6B1E;
+    --clay:#A85C42;
+    --clay-dark:#82442F;
+    --danger:#B23B3B;
+    --danger-bg:#FBEAEA;
+    --ok-bg:#E9F0E4;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(31,42,31,0.06);
+    --font-display:'Fraunces', serif;
+    --font-body:'Public Sans', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--forest);}
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px 64px;}
+
+  header.site{
+    padding:22px 20px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--card);
+  }
+  header.site .head-inner{
+    max-width:640px;margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .site-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:19px;
+    line-height:1.3;
+    margin:0;
+    color:var(--forest-dark);
+  }
+  .site-sub{
+    font-size:13px;color:var(--ink-soft);margin:2px 0 0;
+  }
+  .admin-link{
+    font-size:13px;color:var(--ink-soft);text-decoration:none;white-space:nowrap;
+    border-bottom:1px dotted var(--ink-soft);
+  }
+  .admin-link:hover{color:var(--forest);}
+
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .config-warning{
+    margin:20px 0 0;padding:12px 14px;
+    background:var(--danger-bg);border:1px solid var(--danger);
+    border-radius:10px;font-size:13px;color:var(--danger);
+  }
+
+  /* Landing */
+  .hero{padding:40px 0 8px;}
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:30px;
+    line-height:1.25;
+    margin:0 0 12px;
+    color:var(--forest-dark);
+    max-width:22ch;
+  }
+  .hero p{
+    font-size:15px;color:var(--ink-soft);max-width:52ch;margin:0 0 30px;
+  }
+  .choice-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;
+  }
+  @media (max-width:520px){ .choice-grid{grid-template-columns:1fr;} }
+  .choice-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    text-align:left;
+    cursor:pointer;
+    font-family:inherit;
+    display:flex;flex-direction:column;gap:10px;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .choice-card:hover{border-color:var(--forest);}
+  .choice-card:active{transform:scale(0.99);}
+  .choice-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:19px;
+  }
+  .choice-icon.umkm{background:#E4EBDE;color:var(--forest-dark);}
+  .choice-icon.wisata{background:#F1E3DA;color:var(--clay-dark);}
+  .choice-card h2{
+    font-family:var(--font-display);font-weight:600;font-size:18px;margin:0;color:var(--ink);
+  }
+  .choice-card p{font-size:13.5px;color:var(--ink-soft);margin:0;}
+  .choice-card .go{
+    font-size:13px;font-weight:600;margin-top:4px;
+  }
+  .choice-card.umkm .go{color:var(--forest);}
+  .choice-card.wisata .go{color:var(--clay);}
+
+  .info-note{
+    margin-top:28px;padding:14px 16px;background:var(--card);
+    border:1px solid var(--line);border-radius:10px;
+    font-size:13px;color:var(--ink-soft);
+  }
+
+  /* Form page */
+  .form-header{padding:28px 0 6px;}
+  .back-link{
+    background:none;border:none;padding:0;margin-bottom:14px;
+    font-family:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer;
+  }
+  .back-link:hover{color:var(--forest);}
+  .badge{
+    display:inline-block;font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:100px;margin-bottom:10px;
+  }
+  .badge-umkm{background:#E4EBDE;color:var(--forest-dark);}
+  .badge-wisata{background:#F1E3DA;color:var(--clay-dark);}
+  .form-header h1{
+    font-family:var(--font-display);font-weight:600;font-size:24px;margin:0 0 6px;color:var(--forest-dark);
+  }
+  .form-header p{font-size:14px;color:var(--ink-soft);margin:0;}
+
+  fieldset{border:none;margin:0;padding:0;}
+  .section{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 20px 22px;margin-top:16px;
+  }
+  .section h3{
+    font-family:var(--font-display);font-weight:600;font-size:16px;margin:0 0 4px;color:var(--ink);
+  }
+  .section .section-hint{font-size:13px;color:var(--ink-soft);margin:0 0 16px;}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label.field-label{
+    display:block;font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:6px;
+  }
+  label.field-label .opt{font-weight:400;color:var(--ink-soft);}
+  .req{color:var(--clay);}
+  input[type=text], input[type=tel], textarea, select{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+    font-family:inherit;font-size:14.5px;color:var(--ink);background:#FCFBF8;
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none;border-color:var(--forest);background:#fff;
+  }
+  textarea{resize:vertical;min-height:88px;}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%234B5A4B' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+  .field-help{font-size:12.5px;color:var(--ink-soft);margin-top:5px;}
+
+  /* Map */
+  .map-shell{border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  #map{height:280px;width:100%;}
+  .map-tools{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .btn{
+    font-family:inherit;font-size:13.5px;font-weight:600;
+    padding:9px 15px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;color:var(--ink);cursor:pointer;
+  }
+  .btn:hover{border-color:var(--forest);}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .coord-readout{
+    font-size:13px;color:var(--ink-soft);
+    display:flex;align-items:center;gap:6px;
+  }
+  .coord-readout .dot{width:7px;height:7px;border-radius:50%;background:#C7C2AF;}
+  .coord-readout.is-set .dot{background:var(--forest);}
+  .coord-readout.is-set{color:var(--ink);font-weight:600;}
+  .map-caption{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+
+  /* Photo upload */
+  .photo-input-row{
+    border:1.5px dashed var(--line);border-radius:10px;padding:16px;text-align:center;
+    background:#FCFBF8;
+  }
+  .photo-input-row input[type=file]{display:none;}
+  .photo-input-row label{
+    display:inline-block;font-size:13.5px;font-weight:600;color:var(--forest);cursor:pointer;
+    border-bottom:1px dotted var(--forest);
+  }
+  .photo-input-row .photo-input-hint{font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+  .photo-count{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+  .photo-previews{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;
+  }
+  @media (max-width:420px){ .photo-previews{grid-template-columns:repeat(2,1fr);} }
+  .photo-thumb{position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-remove{
+    position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;
+    background:rgba(31,42,31,0.72);color:#fff;border:none;font-size:14px;line-height:1;cursor:pointer;
+  }
+
+  .submit-row{margin-top:22px;display:flex;flex-direction:column;gap:10px;align-items:stretch;}
+  .btn-submit{
+    background:var(--forest);color:#fff;border:none;border-radius:10px;
+    padding:14px 20px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;
+  }
+  .btn-submit:hover{background:var(--forest-dark);}
+  .btn-submit:disabled{background:#9AA79A;cursor:default;}
+  .submit-error{
+    font-size:13px;color:var(--danger);background:var(--danger-bg);
+    border:1px solid var(--danger);border-radius:8px;padding:10px 12px;display:none;
+  }
+  .submit-error.show{display:block;}
+
+  /* Success page */
+  .success-wrap{padding:60px 0;text-align:center;}
+  .success-icon{
+    width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--forest-dark);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:26px;
+  }
+  .success-wrap h1{
+    font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 8px;color:var(--forest-dark);
+  }
+  .success-wrap p{font-size:14px;color:var(--ink-soft);margin:0 0 26px;}
+  .success-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+  /* Admin */
+  .admin-gate{padding:44px 0;max-width:360px;margin:0 auto;text-align:center;}
+  .admin-gate h1{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 8px;}
+  .admin-gate p{font-size:13.5px;color:var(--ink-soft);margin:0 0 18px;}
+  .admin-gate input{margin-bottom:10px;text-align:center;}
+  .admin-gate .error-text{font-size:13px;color:var(--danger);margin-top:8px;display:none;}
+  .admin-gate .error-text.show{display:block;}
+
+  .admin-header{padding:26px 0 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .admin-header h1{font-family:var(--font-display);font-weight:600;font-size:22px;margin:0 0 4px;}
+  .admin-header p{font-size:13px;color:var(--ink-soft);margin:0;}
+  .admin-status{font-size:13px;color:var(--ink-soft);margin:10px 0 16px;}
+  .admin-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  table.admin-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px;}
+  table.admin-table th, table.admin-table td{
+    text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;
+  }
+  table.admin-table th{background:#F7F5EE;font-weight:600;white-space:nowrap;}
+  table.admin-table td.desc-cell{max-width:220px;color:var(--ink-soft);}
+  table.admin-table .mini-tag{
+    display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;
+  }
+  table.admin-table .thumbs{display:flex;gap:4px;}
+  table.admin-table .thumbs img{width:34px;height:34px;object-fit:cover;border-radius:5px;border:1px solid var(--line);}
+  .wide-container{max-width:960px;}
+
+  .visually-hidden{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="head-inner">
+    <div>
+      <p class="site-title">Form Pengumpulan Data WebGIS UMKM/Wisata Deworejo</p>
+      <p class="site-sub">Pendataan potensi UMKM dan wisata desa</p>
+    </div>
+    <a href="#" class="admin-link" onclick="showPage('admin');return false;">Lihat &amp; unduh data</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="configWarning" class="config-warning" style="display:none;">
+    Koneksi ke Supabase belum diatur. Buka file index.html, cari bagian "KONFIGURASI SUPABASE" di dalam kode, lalu isi SUPABASE_URL dan SUPABASE_ANON_KEY sesuai proyek Supabase Anda.
+  </div>
+
+  <!-- LANDING PAGE -->
+  <section id="page-landing" class="page active">
+    <div class="hero">
+      <h1>Bantu kami memetakan UMKM dan wisata Deworejo</h1>
+      <p>Isi data usaha atau destinasi wisata di wilayah Anda. Data ini akan digunakan untuk menyusun peta potensi desa (WebGIS). Pilih jenis data yang ingin diisi.</p>
+    </div>
+    <div class="choice-grid">
+      <button type="button" class="choice-card umkm" onclick="startForm('umkm')">
+        <span class="choice-icon umkm">🏪</span>
+        <h2>Data UMKM</h2>
+        <p>Usaha kuliner, kerajinan, pertanian, atau peternakan milik warga.</p>
+        <span class="go">Isi data UMKM →</span>
+      </button>
+      <button type="button" class="choice-card wisata" onclick="startForm('wisata')">
+        <span class="choice-icon wisata">⛰️</span>
+        <h2>Data Wisata</h2>
+        <p>Destinasi atau objek wisata alam, budaya, maupun buatan.</p>
+        <span class="go">Isi data wisata →</span>
+      </button>
+    </div>
+    <div class="info-note">
+      Pengisian memakan waktu sekitar 3–5 menit. Siapkan hingga 4 foto dan pastikan lokasi GPS aktif jika ingin memakai tombol "Gunakan lokasi saya".
+    </div>
+  </section>
+
+  <!-- FORM PAGE -->
+  <section id="page-form" class="page">
+    <div class="form-header">
+      <button type="button" class="back-link" onclick="showPage('landing')">← Kembali ke pilihan jenis data</button>
+      <span id="formBadge" class="badge badge-umkm">UMKM</span>
+      <h1 id="formTitle">Data UMKM</h1>
+      <p>Lengkapi kolom di bawah ini sesuai kondisi sebenarnya di lapangan.</p>
+    </div>
+
+    <form id="dataForm" novalidate>
+      <div class="section">
+        <h3>Informasi umum</h3>
+        <p class="section-hint">Nama dan kategori usaha atau destinasi.</p>
+        <div class="field">
+          <label class="field-label" id="fNamaLabel" for="fNama">Nama UMKM <span class="req">*</span></label>
+          <input type="text" id="fNama" placeholder="Contoh: Warung Bakso Bu Sri" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="fKategori">Kategori <span class="req">*</span></label>
+          <select id="fKategori" required onchange="toggleKategoriLainnya()">
+            <option value="" disabled selected>Pilih kategori</option>
+          </select>
+        </div>
+        <div class="field" id="fKategoriLainnyaField" style="display:none;">
+          <label class="field-label" for="fKategoriLainnya">Sebutkan kategorinya <span class="req">*</span></label>
+          <input type="text" id="fKategoriLainnya" placeholder="Tuliskan kategori yang sesuai" />
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Lokasi</h3>
+        <p class="section-hint">Tandai titik lokasi pada peta, lalu lengkapi alamatnya.</p>
+        <div class="field">
+          <label class="field-label">Titik koordinat <span class="req">*</span></label>
+          <div class="map-shell">
+            <div id="map"></div>
+          </div>
+          <div class="map-tools">
+            <button type="button" class="btn" id="btnLocateMe" onclick="useMyLocation()">Gunakan lokasi saya</button>
+            <span class="coord-readout" id="coordStatus">
+              <span class="dot"></span>
+              <span id="coordDisplay">Belum ada titik dipilih</span>
+            </span>
+          </div>
+          <p class="map-caption">Tap/klik pada peta untuk menandai lokasi, atau geser penanda yang sudah muncul.</p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="fAlamat">Alamat (dusun/desa) <span class="req">*</span></label>
+          <input type="text" id="fAlamat" placeholder="Contoh: Dusun Krajan, Desa Deworejo" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="fAlamatLengkap">Alamat lengkap <span class="opt">(opsional)</span></label>
+          <textarea id="fAlamatLengkap" placeholder="Nama jalan, RT/RW, atau patokan terdekat"></textarea>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Deskripsi &amp; kontak</h3>
+        <div class="field">
+          <label class="field-label" id="fDeskripsiLabel" for="fDeskripsi">Deskripsi usaha <span class="opt">(opsional)</span></label>
+          <textarea id="fDeskripsi" placeholder="Ceritakan produk atau kegiatan usaha secara singkat"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" for="fKontak">Nomor kontak <span class="req">*</span></label>
+          <input type="tel" id="fKontak" placeholder="08xxxxxxxxxx" required />
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Foto</h3>
+        <p class="section-hint">Unggah maksimal 4 foto (produk, tempat usaha, atau suasana).</p>
+        <div class="photo-input-row">
+          <label for="photoInput">Pilih foto</label>
+          <input type="file" id="photoInput" accept="image/*" multiple />
+          <p class="photo-input-hint">Format JPG/PNG, maksimal 4 foto.</p>
+        </div>
+        <p class="photo-count" id="photoCount">0/4 foto dipilih</p>
+        <div class="photo-previews" id="photoPreviews"></div>
+      </div>
+
+      <div class="submit-row">
+        <p class="submit-error" id="submitError"></p>
+        <button type="submit" class="btn-submit" id="btnSubmit">Kirim data</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- SUCCESS PAGE -->
+  <section id="page-success" class="page">
+    <div class="success-wrap">
+      <div class="success-icon">✓</div>
+      <h1>Data berhasil dikirim</h1>
+      <p>Terima kasih, data yang Anda isi sudah tersimpan dan akan digunakan untuk pemetaan WebGIS desa.</p>
+      <div class="success-actions">
+        <button type="button" class="btn" onclick="startForm(currentJenis)">Isi data lain</button>
+        <button type="button" class="btn" onclick="showPage('landing')">Kembali ke beranda</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN PAGE -->
+  <section id="page-admin" class="page">
+    <div id="adminGate" class="admin-gate">
+      <h1>Data terkumpul</h1>
+      <p>Masukkan kode akses untuk melihat dan mengunduh data yang sudah masuk.</p>
+      <input type="text" id="adminPasscode" placeholder="Kode akses" />
+      <div>
+        <button type="button" class="btn" onclick="checkAdminPasscode()">Masuk</button>
+      </div>
+      <p class="error-text" id="adminPasscodeError">Kode akses salah, coba lagi.</p>
+      <p style="margin-top:18px;"><button type="button" class="back-link" onclick="showPage('landing')">← Kembali ke beranda</button></p>
+    </div>
+
+    <div id="adminContent" style="display:none;">
+      <div class="admin-header">
+        <div>
+          <h1>Data terkumpul</h1>
+          <p>Seluruh data UMKM dan wisata yang sudah masuk ke Supabase.</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn" onclick="loadAdminData()">Muat ulang</button>
+          <button type="button" class="btn" onclick="downloadCSV()">Unduh CSV</button>
+        </div>
+      </div>
+      <p class="admin-status" id="adminStatus">Memuat data...</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="adminTable">
+          <thead>
+            <tr>
+              <th>Jenis</th><th>Nama</th><th>Kategori</th><th>Alamat</th>
+              <th>Koordinat</th><th>Kontak</th><th class="desc-cell">Deskripsi</th><th>Foto</th><th>Tanggal</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================================================
+   KONFIGURASI SUPABASE
+   Ganti tiga nilai di bawah ini sesuai proyek Supabase Anda.
+   1. Buat proyek di https://supabase.com
+   2. Jalankan skrip SQL dari file supabase-setup.sql yang disertakan
+   3. Salin "Project URL" dan "anon public key" dari Settings > API
+   ========================================================= */
+const SUPABASE_URL = "https://adspmdhtktingxoixbmu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkc3BtZGh0a3Rpbmd4b2l4Ym11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMjM0MTIsImV4cCI6MjEwMzg5OTQxMn0.fz8_JssrtZWcWDts6bcaplTzTWqZr8K9-mVGJ863Za0";
+const TABLE_NAME = "umkm_wisata_data";
+const STORAGE_BUCKET = "umkm-wisata-foto";
+const ADMIN_PASSCODE = "deworejo2026"; // ganti kode akses halaman "Lihat & unduh data"
+/* ========================================================= */
+
+const KATEGORI_UMKM = ["Kuliner", "Kerajinan", "Pertanian", "Peternakan", "Lainnya"];
+const KATEGORI_WISATA = ["Wisata Alam", "Wisata Budaya", "Wisata Edukasi", "Lainnya"];
+const DEFAULT_CENTER = [-7.7956, 110.3695]; // sekitar Yogyakarta, sesuaikan jika perlu
+
+let supabase = null;
+let isConfigured = !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON");
+if (isConfigured && window.supabase) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+if (!isConfigured) {
+  document.getElementById("configWarning").style.display = "block";
+}
+
+let currentJenis = "umkm";
+let currentCoords = null;
+let photoFiles = [];
+let map, marker;
+let adminData = [];
+
+function showPage(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page-" + name).classList.add("active");
+  window.scrollTo(0, 0);
+  if (name === "form") {
+    setTimeout(() => { if (map) map.invalidateSize(); }, 50);
+  }
+}
+
+function startForm(jenis) {
+  currentJenis = jenis;
+  resetForm();
+
+  const kategoriSelect = document.getElementById("fKategori");
+  kategoriSelect.innerHTML = '<option value="" disabled selected>Pilih kategori</option>';
+  const list = jenis === "umkm" ? KATEGORI_UMKM : KATEGORI_WISATA;
+  list.forEach(k => {
+    const opt = document.createElement("option");
+    opt.value = k;
+    opt.textContent = k;
+    kategoriSelect.appendChild(opt);
+  });
+
+  const isUmkm = jenis === "umkm";
+  document.getElementById("formTitle").textContent = isUmkm ? "Data UMKM" : "Data Wisata";
+  document.getElementById("fNamaLabel").innerHTML = (isUmkm ? "Nama UMKM" : "Nama objek wisata") + ' <span class="req">*</span>';
+  document.getElementById("fNama").placeholder = isUmkm ? "Contoh: Warung Bakso Bu Sri" : "Contoh: Air Terjun Deworejo";
+  document.getElementById("fDeskripsiLabel").innerHTML = (isUmkm ? "Deskripsi usaha" : "Deskripsi wisata") + ' <span class="opt">(opsional)</span>';
+  const badge = document.getElementById("formBadge");
+  badge.textContent = isUmkm ? "UMKM" : "Wisata";
+  badge.className = "badge " + (isUmkm ? "badge-umkm" : "badge-wisata");
+
+  showPage("form");
+  initMap();
+}
+
+function resetForm() {
+  document.getElementById("dataForm").reset();
+  currentCoords = null;
+  photoFiles = [];
+  renderPhotoPreviews();
+  updateCoordDisplayEmpty();
+  hideSubmitError();
+  toggleKategoriLainnya();
+  if (marker) {
+    map.removeLayer(marker);
+    marker = null;
+  }
+}
+
+function toggleKategoriLainnya() {
+  const select = document.getElementById("fKategori");
+  const field = document.getElementById("fKategoriLainnyaField");
+  const input = document.getElementById("fKategoriLainnya");
+  if (select.value === "Lainnya") {
+    field.style.display = "block";
+  } else {
+    field.style.display = "none";
+    input.value = "";
+  }
+}
+
+/* ---------- Map ---------- */
+function initMap() {
+  if (map) {
+    map.invalidateSize();
+    return;
+  }
+  map = L.map("map").setView(DEFAULT_CENTER, 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+    maxZoom: 19
+  }).addTo(map);
+  map.on("click", e => setMarker(e.latlng.lat, e.latlng.lng));
+}
+
+function setMarker(lat, lng) {
+  if (marker) {
+    marker.setLatLng([lat, lng]);
+  } else {
+    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    marker.on("dragend", () => {
+      const p = marker.getLatLng();
+      updateCoordDisplay(p.lat, p.lng);
+    });
+  }
+  map.setView([lat, lng], Math.max(map.getZoom(), 16));
+  updateCoordDisplay(lat, lng);
+}
+
+function updateCoordDisplay(lat, lng) {
+  currentCoords = { lat, lng };
+  const el = document.getElementById("coordStatus");
+  el.classList.add("is-set");
+  document.getElementById("coordDisplay").textContent = lat.toFixed(6) + ", " + lng.toFixed(6);
+}
+
+function updateCoordDisplayEmpty() {
+  const el = document.getElementById("coordStatus");
+  el.classList.remove("is-set");
+  document.getElementById("coordDisplay").textContent = "Belum ada titik dipilih";
+}
+
+function useMyLocation() {
+  if (!navigator.geolocation) {
+    alert("Perangkat/browser ini tidak mendukung layanan lokasi.");
+    return;
+  }
+  const btn = document.getElementById("btnLocateMe");
+  btn.disabled = true;
+  btn.textContent = "Mencari lokasi...";
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      setMarker(pos.coords.latitude, pos.coords.longitude);
+      btn.disabled = false;
+      btn.textContent = "Gunakan lokasi saya";
+    },
+    err => {
+      alert("Tidak bisa mengambil lokasi: " + err.message + ". Silakan tandai titik secara manual pada peta.");
+      btn.disabled = false;
+      btn.textContent = "Gunakan lokasi saya";
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+/* ---------- Photo upload ---------- */
+document.getElementById("photoInput").addEventListener("change", handlePhotoInput);
+
+function handlePhotoInput(e) {
+  const files = Array.from(e.target.files);
+  const room = 4 - photoFiles.length;
+  if (files.length > room) {
+    alert("Maksimal 4 foto. Sisa slot yang tersedia: " + room + ".");
+  }
+  files.slice(0, room).forEach(f => {
+    if (f.type.startsWith("image/")) photoFiles.push(f);
+  });
+  e.target.value = "";
+  renderPhotoPreviews();
+}
+
+function removePhoto(idx) {
+  photoFiles.splice(idx, 1);
+  renderPhotoPreviews();
+}
+
+function renderPhotoPreviews() {
+  const wrap = document.getElementById("photoPreviews");
+  wrap.innerHTML = "";
+  photoFiles.forEach((f, idx) => {
+    const url = URL.createObjectURL(f);
+    const div = document.createElement("div");
+    div.className = "photo-thumb";
+    div.innerHTML = '<img src="' + url + '" alt="Foto ' + (idx + 1) + '"><button type="button" class="photo-remove" data-idx="' + idx + '" aria-label="Hapus foto">×</button>';
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll(".photo-remove").forEach(btn => {
+    btn.addEventListener("click", () => removePhoto(Number(btn.dataset.idx)));
+  });
+  document.getElementById("photoCount").textContent = photoFiles.length + "/4 foto dipilih";
+  document.getElementById("photoInput").disabled = photoFiles.length >= 4;
+}
+
+function compressImage(file, maxWidth, quality) {
+  maxWidth = maxWidth || 1600;
+  quality = quality || 0.8;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let width = img.width, height = img.height;
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => resolve(blob), "image/jpeg", quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- Submit ---------- */
+document.getElementById("dataForm").addEventListener("submit", submitForm);
+
+function showSubmitError(msg) {
+  const el = document.getElementById("submitError");
+  el.textContent = msg;
+  el.classList.add("show");
+}
+function hideSubmitError() {
+  document.getElementById("submitError").classList.remove("show");
+}
+
+function setSubmitting(state) {
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = state;
+  btn.textContent = state ? "Mengirim..." : "Kirim data";
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  hideSubmitError();
+
+  if (!isConfigured || !supabase) {
+    showSubmitError("Koneksi Supabase belum dikonfigurasi. Hubungi pengelola website.");
+    return;
+  }
+  const nama = document.getElementById("fNama").value.trim();
+  const kategoriPilihan = document.getElementById("fKategori").value;
+  const kategoriLainnya = document.getElementById("fKategoriLainnya").value.trim();
+  const kategori = kategoriPilihan === "Lainnya" ? kategoriLainnya : kategoriPilihan;
+  const alamat = document.getElementById("fAlamat").value.trim();
+  const alamatLengkap = document.getElementById("fAlamatLengkap").value.trim();
+  const deskripsi = document.getElementById("fDeskripsi").value.trim();
+  const kontak = document.getElementById("fKontak").value.trim();
+
+  if (!nama || !kategoriPilihan || !alamat || !kontak) {
+    showSubmitError("Mohon lengkapi kolom yang bertanda wajib (*).");
+    return;
+  }
+  if (kategoriPilihan === "Lainnya" && !kategoriLainnya) {
+    showSubmitError("Mohon tuliskan nama kategori pada kolom \"Sebutkan kategorinya\".");
+    return;
+  }
+  if (!currentCoords) {
+    showSubmitError("Silakan tandai titik lokasi pada peta terlebih dahulu.");
+    return;
+  }
+
+  setSubmitting(true);
+  try {
+    const id = crypto.randomUUID();
+    const fotoUrls = [];
+    for (let i = 0; i < photoFiles.length; i++) {
+      const blob = await compressImage(photoFiles[i]);
+      const path = currentJenis + "/" + id + "/" + (i + 1) + ".jpg";
+      const { error: upErr } = await supabase.storage.from(STORAGE_BUCKET).upload(path, blob, {
+        contentType: "image/jpeg",
+        upsert: true
+      });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+      fotoUrls.push(urlData.publicUrl);
+    }
+
+    const { error: insErr } = await supabase.from(TABLE_NAME).insert([{
+      id,
+      jenis: currentJenis,
+      nama,
+      kategori,
+      alamat,
+      alamat_lengkap: alamatLengkap,
+      latitude: currentCoords.lat,
+      longitude: currentCoords.lng,
+      deskripsi,
+      kontak,
+      foto_urls: fotoUrls
+    }]);
+    if (insErr) throw insErr;
+
+    showPage("success");
+  } catch (err) {
+    console.error(err);
+    showSubmitError("Gagal mengirim data: " + (err.message || "terjadi kesalahan") + ". Periksa koneksi internet dan coba lagi.");
+  } finally {
+    setSubmitting(false);
+  }
+}
+
+/* ---------- Admin ---------- */
+function checkAdminPasscode() {
+  const val = document.getElementById("adminPasscode").value;
+  if (val === ADMIN_PASSCODE) {
+    document.getElementById("adminGate").style.display = "none";
+    document.getElementById("adminContent").style.display = "block";
+    loadAdminData();
+  } else {
+    document.getElementById("adminPasscodeError").classList.add("show");
+  }
+}
+
+async function loadAdminData() {
+  if (!isConfigured || !supabase) {
+    document.getElementById("adminStatus").textContent = "Koneksi Supabase belum dikonfigurasi.";
+    return;
+  }
+  const status = document.getElementById("adminStatus");
+  status.textContent = "Memuat data...";
+  const { data, error } = await supabase.from(TABLE_NAME).select("*").order("created_at", { ascending: false });
+  if (error) {
+    status.textContent = "Gagal memuat data: " + error.message;
+    return;
+  }
+  adminData = data || [];
+  status.textContent = adminData.length + " data ditemukan.";
+  renderAdminTable(adminData);
+}
+
+function renderAdminTable(data) {
+  const body = document.getElementById("adminTableBody");
+  body.innerHTML = "";
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    const isUmkm = row.jenis === "umkm";
+    const tagStyle = isUmkm ? "background:#E4EBDE;color:#20391F;" : "background:#F1E3DA;color:#82442F;";
+    const thumbs = (row.foto_urls || []).slice(0, 4).map(u => '<img src="' + u + '" alt="">').join("");
+    const tanggal = row.created_at ? new Date(row.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) : "-";
+    tr.innerHTML =
+      '<td><span class="mini-tag" style="' + tagStyle + '">' + (isUmkm ? "UMKM" : "Wisata") + '</span></td>' +
+      "<td>" + escapeHtml(row.nama || "-") + "</td>" +
+      "<td>" + escapeHtml(row.kategori || "-") + "</td>" +
+      "<td>" + escapeHtml(row.alamat || "-") + "</td>" +
+      "<td>" + (row.latitude != null ? row.latitude.toFixed(5) + ", " + row.longitude.toFixed(5) : "-") + "</td>" +
+      "<td>" + escapeHtml(row.kontak || "-") + "</td>" +
+      '<td class="desc-cell">' + escapeHtml(row.deskripsi || "-") + "</td>" +
+      '<td><div class="thumbs">' + (thumbs || "-") + "</div></td>" +
+      "<td>" + tanggal + "</td>";
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function downloadCSV() {
+  if (!adminData || !adminData.length) {
+    alert("Tidak ada data untuk diunduh.");
+    return;
+  }
+  const headers = ["jenis", "nama", "kategori", "alamat", "alamat_lengkap", "latitude", "longitude", "deskripsi", "kontak", "foto_urls", "created_at"];
+  const rows = adminData.map(row => headers.map(h => {
+    let val = row[h];
+    if (Array.isArray(val)) val = val.join(" | ");
+    if (val === null || val === undefined) val = "";
+    val = String(val).replace(/"/g, '""');
+    return '"' + val + '"';
+  }).join(","));
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "data-umkm-wisata-deworejo-" + Date.now() + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
