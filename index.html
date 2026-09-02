@@ -488,7 +488,7 @@ const ADMIN_PASSCODE = "deworejo2026"; // ganti kode akses halaman "Lihat & undu
 
 const KATEGORI_UMKM = ["Kuliner", "Kerajinan", "Pertanian", "Peternakan", "Lainnya"];
 const KATEGORI_WISATA = ["Wisata Alam", "Wisata Budaya", "Wisata Edukasi", "Lainnya"];
-const DEFAULT_CENTER = [-7.7956, 110.3695]; // sekitar Yogyakarta, sesuaikan jika perlu
+const DEFAULT_CENTER = [-7.51, 111.12]; // sekitar Sukorejo, Sambirejo, Sragen
 
 let supabaseClient = null;
 let isConfigured = !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON");
@@ -573,7 +573,7 @@ function initMap() {
     map.invalidateSize();
     return;
   }
-  map = L.map("map").setView(DEFAULT_CENTER, 13);
+  map = L.map("map").setView(DEFAULT_CENTER, 14);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",
     maxZoom: 19
