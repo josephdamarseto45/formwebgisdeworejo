@@ -331,6 +331,15 @@
 
     <form id="dataForm" novalidate>
       <div class="section">
+        <h3>Data pengisi</h3>
+        <p class="section-hint">Nama Anda yang mengisi formulir ini (bukan nama usaha/wisata).</p>
+        <div class="field">
+          <label class="field-label" for="fNamaPengisi">Nama pengisi <span class="req">*</span></label>
+          <input type="text" id="fNamaPengisi" placeholder="Nama lengkap Anda" required />
+        </div>
+      </div>
+
+      <div class="section">
         <h3>Informasi umum</h3>
         <p class="section-hint">Nama dan kategori usaha atau destinasi.</p>
         <div class="field">
@@ -449,7 +458,7 @@
         <table class="admin-table" id="adminTable">
           <thead>
             <tr>
-              <th>Jenis</th><th>Nama</th><th>Kategori</th><th>Alamat</th>
+              <th>Jenis</th><th>Nama Pengisi</th><th>Nama</th><th>Kategori</th><th>Alamat</th>
               <th>Koordinat</th><th>Kontak</th><th class="desc-cell">Deskripsi</th><th>Foto</th><th>Tanggal</th>
             </tr>
           </thead>
@@ -713,6 +722,7 @@ async function submitForm(e) {
     showSubmitError("Koneksi Supabase belum dikonfigurasi. Hubungi pengelola website.");
     return;
   }
+  const namaPengisi = document.getElementById("fNamaPengisi").value.trim();
   const nama = document.getElementById("fNama").value.trim();
   const kategoriPilihan = document.getElementById("fKategori").value;
   const kategoriLainnya = document.getElementById("fKategoriLainnya").value.trim();
@@ -722,7 +732,7 @@ async function submitForm(e) {
   const deskripsi = document.getElementById("fDeskripsi").value.trim();
   const kontak = document.getElementById("fKontak").value.trim();
 
-  if (!nama || !kategoriPilihan || !alamat || !kontak) {
+  if (!namaPengisi || !nama || !kategoriPilihan || !alamat || !kontak) {
     showSubmitError("Mohon lengkapi kolom yang bertanda wajib (*).");
     return;
   }
@@ -754,6 +764,7 @@ async function submitForm(e) {
     const { error: insErr } = await supabaseClient.from(TABLE_NAME).insert([{
       id,
       jenis: currentJenis,
+      nama_pengisi: namaPengisi,
       nama,
       kategori,
       alamat,
@@ -815,6 +826,7 @@ function renderAdminTable(data) {
     const tanggal = row.created_at ? new Date(row.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) : "-";
     tr.innerHTML =
       '<td><span class="mini-tag" style="' + tagStyle + '">' + (isUmkm ? "UMKM" : "Wisata") + '</span></td>' +
+      "<td>" + escapeHtml(row.nama_pengisi || "-") + "</td>" +
       "<td>" + escapeHtml(row.nama || "-") + "</td>" +
       "<td>" + escapeHtml(row.kategori || "-") + "</td>" +
       "<td>" + escapeHtml(row.alamat || "-") + "</td>" +
@@ -838,7 +850,7 @@ function downloadCSV() {
     alert("Tidak ada data untuk diunduh.");
     return;
   }
-  const headers = ["jenis", "nama", "kategori", "alamat", "alamat_lengkap", "latitude", "longitude", "deskripsi", "kontak", "foto_urls", "created_at"];
+  const headers = ["jenis", "nama_pengisi", "nama", "kategori", "alamat", "alamat_lengkap", "latitude", "longitude", "deskripsi", "kontak", "foto_urls", "created_at"];
   const rows = adminData.map(row => headers.map(h => {
     let val = row[h];
     if (Array.isArray(val)) val = val.join(" | ");
