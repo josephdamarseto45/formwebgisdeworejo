@@ -574,9 +574,13 @@ function initMap() {
     return;
   }
   map = L.map("map").setView(DEFAULT_CENTER, 14);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    attribution: "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
     maxZoom: 19
+  }).addTo(map);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19,
+    opacity: 0.9
   }).addTo(map);
   map.on("click", e => setMarker(e.latlng.lat, e.latlng.lng));
 }
